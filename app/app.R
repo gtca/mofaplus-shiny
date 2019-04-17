@@ -16,51 +16,56 @@ load_all('../../BioFAM/BioFAMtools/')
 options(shiny.maxRequestSize = 300*1024^2)
 
 # Define UI for application that draws a histogram
-ui <- fluidPage(
+ui <- fluidPage(theme = "styles.css",
 
     # Application title
     titlePanel("MOFA+ model exploration"),
     
 
-    # Sidebar with a slider input for number of bins 
-    # sidebarLayout(
-        # sidebarPanel(
-        #     # sliderInput("bins",
-        #     #             "Number of bins:",
-        #     #             min = 1,
-        #     #             max = 50,
-        #     #             value = 30),
-        #     # HDF5 model file picker
-        #     fileInput(inputId = "model_hdf_file",
-        #               label = "Model HDF5 file:",
-        #               buttonLabel = "Model file",
-        #               accept = "hdf5")
-        #                 
-        # ),
+    # Sidebar with main model parameters choices
+    sidebarLayout(
+        sidebarPanel(
+            # HDF5 model file picker
+            fileInput(inputId = "model_hdf_file",
+                      label = "Model HDF5 file:",
+                      buttonLabel = "Model file",
+                      accept = "hdf5"),
+            uiOutput("factorsChoice"),
+            uiOutput("colourChoice"),
+            width = 4
+        ),
+    
 
         # Show a plot of the generated distribution
         mainPanel(
             tabsetPanel(
                 tabPanel("Model overview", 
-                    # HDF5 model file picker
-                    fileInput(inputId = "model_hdf_file",
-                              label = "Model HDF5 file:",
-                              buttonLabel = "Model file",
-                              accept = "hdf5"),
                     plotOutput("modelOverviewPlot")
                 ),
+                tabPanel("Variance", 
+                         # TODO: selector x, y
+                         # TODO: selector group_by
+                         # TODO: embed multiple plots on one page
+                         plotOutput("varianceExplainedPlot")
+                ),
                 tabPanel("Loadings", 
-                         uiOutput("factorsChoice_loadings"),
-                         # sidebarPanel(selectInput("factorsChoice", "Choose one or more factors:", choices = 1:2, multiple = TRUE)),
+                         # TODO: show/hide labels of N genes
+                         # TODO: N ^
+                         # TODO: Sort values by factor ...
                          plotOutput("weightsPlot")
                 ),
                 tabPanel("Factors", 
-                         uiOutput("factorsChoice_factors"),
+                         # TODO: group_by
                          plotOutput("factorsPlot")
+                ),
+                tabPanel("Embeddings", 
+                         # TODO: 2 LFs to plot
+                         plotOutput("embeddingsPlot")
                 )
-            )
+            ),
+            width = 8
         )
-    # )
+    )
 )
 
 # Define server logic required to draw a histogram
@@ -78,29 +83,31 @@ server <- function(input, output) {
         factors_names(m)
     })
     
-    factorsSelection_loadings <- reactive({
-        if (is.null(input$factorsChoice_loadings))
+    coloursChoice <- reactive({
+        m <- model()
+        if (is.null(m)) return(NULL)
+        metadata_names <- colnames(samples_metadata(m))
+        metadata_names[metadata_names != "sample_name"]
+    })
+    
+    factorsSelection <- reactive({
+        if (is.null(input$factorsChoice))
             return("all")
-        input$factorsChoice_loadings
+        input$factorsChoice
     })
     
-    factorsSelection_factors <- reactive({
-        if (is.null(input$factorsChoice_factors))
-            return("all")
-        input$factorsChoice_factors
+    colourSelection <- reactive({
+        if (is.null(input$colourChoice))
+            return("group_name")
+        input$colourChoice
     })
     
-    # userSelection <- reactiveValues(factorsSelection = reactive({
-    #     if (is.null(input$factorsChoice))
-    #         return("all")
-    #     input$factorsChoice
-    # }))
-    
-    output$factorsChoice_loadings <- renderUI({
-        selectInput('factorsChoice_loadings', 'Factors:', choices = factorsChoice(), multiple = TRUE, selected = factorsSelection_factors())
+    output$factorsChoice <- renderUI({
+        selectInput('factorsChoice', 'Factors:', choices = factorsChoice(), multiple = TRUE, selectize = TRUE)
     })
-    output$factorsChoice_factors <- renderUI({
-        selectInput('factorsChoice_factors', 'Factors:', choices = factorsChoice(), multiple = TRUE, selected = factorsSelection_loadings())
+    
+    output$colourChoice <- renderUI({
+        selectInput('colourChoice', 'Colour cells:', choices = coloursChoice(), multiple = FALSE, selectize = TRUE)
     })
     
     output$modelOverviewPlot <- renderPlot({
@@ -108,17 +115,29 @@ server <- function(input, output) {
         if (is.null(m)) return(NULL)
         plot_data_overview(m)
     })
+    
+    output$varianceExplainedPlot <- renderPlot({
+        m <- model()
+        if (is.null(m)) return(NULL)
+        plot_variance_explained_(subset_factors(m, factors = factorsSelection()), x = 'group', plot_total = FALSE)
+    })
 
     output$weightsPlot <- renderPlot({
         m <- model()
         if (is.null(m)) return(NULL)
-        plot_weights(m, factors = factorsSelection_loadings()) 
+        plot_weights(m, factors = factorsSelection()) 
     })
     
     output$factorsPlot <- renderPlot({
         m <- model()
         if (is.null(m)) return(NULL)
-        plot_factors_jitter(m, factors = factorsSelection_factors()) 
+        plot_factors_jitter(m, factors = factorsSelection(), color_by = colourSelection()) 
+    })
+    
+    output$embeddingsPlot <- renderPlot({
+        m <- model()
+        if (is.null(m)) return(NULL)
+        plot_factors(m, factors = 1:2, color_by = colourSelection()) 
     })
 }
 

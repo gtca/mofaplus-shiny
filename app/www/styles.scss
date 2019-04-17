@@ -1,0 +1,44 @@
+$lightgrey: #F0F0F0;
+$darkgrey: #555555;
+$darkgrey2: #282C2F;
+$firefly: #0E2C37;
+
+html, body {
+	font-family: "Helvetica Neue", "Open Sans", "Sans-Serif";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+
+	.container-fluid {
+		h2 {
+			font-family: "Helvetica Neue", "Open Sans", "Sans-Serif";
+			font-weight: 300;
+			font-size: 24pt;
+			color: $firefly;
+			padding: 20px 5px;
+		}
+
+		.row {
+			.well {
+				color: white;
+				background-color: $darkgrey2;
+			}
+
+			.tabbable {
+				.nav-tabs > li {
+
+					a {
+						background-color: $lightgrey;
+						color: $darkgrey;
+					}
+
+					&.active > a {
+						background-color: white;
+						color: $firefly;
+					}
+					
+				}
+			}
+		}
+	}
+}

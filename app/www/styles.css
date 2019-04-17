@@ -1,0 +1,27 @@
+html, body {
+  font-family: "Helvetica Neue", "Open Sans", "Sans-Serif";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+html .container-fluid h2, body .container-fluid h2 {
+  font-family: "Helvetica Neue", "Open Sans", "Sans-Serif";
+  font-weight: 300;
+  font-size: 24pt;
+  color: #0E2C37;
+  padding: 20px 5px;
+}
+html .container-fluid .row .well, body .container-fluid .row .well {
+  color: white;
+  background-color: #282C2F;
+}
+html .container-fluid .row .tabbable .nav-tabs > li a, body .container-fluid .row .tabbable .nav-tabs > li a {
+  background-color: #F0F0F0;
+  color: #555555;
+}
+html .container-fluid .row .tabbable .nav-tabs > li.active > a, body .container-fluid .row .tabbable .nav-tabs > li.active > a {
+  background-color: white;
+  color: #0E2C37;
+}
+
+/*# sourceMappingURL=styles.css.map */
