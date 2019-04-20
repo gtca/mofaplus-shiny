@@ -61,6 +61,9 @@ ui <- fluidPage(theme = "styles.css",
                 tabPanel("Embeddings", 
                          fluidRow(
                             column(3, uiOutput("factorChoice_x")),
+                            column(1, actionButton("swapEmbeddings", "swap", 
+                                                   icon("exchange-alt"),
+                                                   style = "margin: 25px 0;")),
                             column(3, uiOutput("factorChoice_y"))
                          ),
                          hr(),
@@ -187,6 +190,25 @@ server <- function(input, output) {
         selectInput('factorChoice_y', 'Factor on Y axis:', 
                     choices = factorsChoice(), multiple = FALSE, selectize = TRUE,
                     selected = factorSelection_y())
+    })
+    
+    
+    observeEvent(input$swapEmbeddings, {
+        x_sel <- input$factorChoice_x
+        y_sel <- input$factorChoice_y
+        if (!is.null(x_sel) && !is.null(y_sel)) {
+            output$factorChoice_y <- renderUI({
+                selectInput('factorChoice_y', 'Factor on Y axis:', 
+                            choices = factorsChoice(), multiple = FALSE, selectize = TRUE,
+                            selected = x_sel)
+            })
+            
+            output$factorChoice_x <- renderUI({
+                selectInput('factorChoice_x', 'Factor on X axis:', 
+                            choices = factorsChoice(), multiple = FALSE, selectize = TRUE,
+                            selected = y_sel)
+            })
+        }
     })
 }
 
