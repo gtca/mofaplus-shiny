@@ -59,7 +59,11 @@ ui <- fluidPage(theme = "styles.css",
                          plotOutput("factorsPlot")
                 ),
                 tabPanel("Embeddings", 
-                         # TODO: 2 LFs to plot
+                         fluidRow(
+                            column(3, uiOutput("factorChoice_x")),
+                            column(3, uiOutput("factorChoice_y"))
+                         ),
+                         hr(),
                          plotOutput("embeddingsPlot")
                 )
             ),
@@ -102,6 +106,21 @@ server <- function(input, output) {
         input$colourChoice
     })
     
+    
+    
+    factorSelection_x <- reactive({
+        if (is.null(input$factorChoice_x))
+            return(1)
+        input$factorChoice_x
+    })
+    
+    factorSelection_y <- reactive({
+        if (is.null(input$factorChoice_y))
+            return(2)
+        input$factorChoice_y
+    })
+    
+    
     output$factorsChoice <- renderUI({
         selectInput('factorsChoice', 'Factors:', choices = factorsChoice(), multiple = TRUE, selectize = TRUE)
     })
@@ -119,7 +138,9 @@ server <- function(input, output) {
     output$varianceExplainedPlot <- renderPlot({
         m <- model()
         if (is.null(m)) return(NULL)
-        plot_variance_explained_(subset_factors(m, factors = factorsSelection()), x = 'group', plot_total = FALSE)
+        plot_variance_explained(m, factors = factorsSelection(), 
+                                x = 'group', y = 'factor',
+                                plot_total = FALSE)
     })
 
     output$weightsPlot <- renderPlot({
@@ -131,13 +152,25 @@ server <- function(input, output) {
     output$factorsPlot <- renderPlot({
         m <- model()
         if (is.null(m)) return(NULL)
-        plot_factors_jitter(m, factors = factorsSelection(), color_by = colourSelection()) 
+        plot_factors(m, factors = factorsSelection(), color_by = colourSelection()) 
     })
     
     output$embeddingsPlot <- renderPlot({
         m <- model()
         if (is.null(m)) return(NULL)
-        plot_factors(m, factors = 1:2, color_by = colourSelection()) 
+        plot_embeddings(m, factors = c(factorSelection_x(), factorSelection_y()), color_by = colourSelection()) 
+    })
+    
+    output$factorChoice_x <- renderUI({
+        selectInput('factorChoice_x', 'Factor on X axis:', 
+                    choices = factorsChoice(), multiple = FALSE, selectize = TRUE,
+                    selected = factorsChoice()[1])
+    })
+    
+    output$factorChoice_y <- renderUI({
+        selectInput('factorChoice_y', 'Factor on Y axis:', 
+                    choices = factorsChoice(), multiple = FALSE, selectize = TRUE,
+                    selected = factorsChoice()[2])
     })
 }
 
