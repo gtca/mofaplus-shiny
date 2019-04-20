@@ -32,7 +32,7 @@ ui <- fluidPage(theme = "styles.css",
                       accept = "hdf5"),
             uiOutput("factorsChoice"),
             uiOutput("colourChoice"),
-            width = 4
+            width = 3
         ),
     
 
@@ -67,7 +67,7 @@ ui <- fluidPage(theme = "styles.css",
                          plotOutput("embeddingsPlot")
                 )
             ),
-            width = 8
+            width = 9
         )
     )
 )
