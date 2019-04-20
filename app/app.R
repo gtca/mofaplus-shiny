@@ -109,14 +109,28 @@ server <- function(input, output) {
     
     
     factorSelection_x <- reactive({
-        if (is.null(input$factorChoice_x))
-            return(1)
+        if (is.null(input$factorChoice_x)) {
+            selected_global <- input$factorsChoice
+            if (is.null(selected_global)) {
+                return(1)
+            } else {
+                return(selected_global[1])
+            }
+        }
         input$factorChoice_x
     })
     
     factorSelection_y <- reactive({
-        if (is.null(input$factorChoice_y))
-            return(2)
+        if (is.null(input$factorChoice_x)) {
+            selected_global <- input$factorsChoice
+            if (is.null(selected_global)) {
+                return(2)
+            } else if (length(selected_global) > 1) {
+                return(selected_global[2])
+            } else {
+                return(2)
+            }
+        }
         input$factorChoice_y
     })
     
@@ -164,13 +178,13 @@ server <- function(input, output) {
     output$factorChoice_x <- renderUI({
         selectInput('factorChoice_x', 'Factor on X axis:', 
                     choices = factorsChoice(), multiple = FALSE, selectize = TRUE,
-                    selected = factorsChoice()[1])
+                    selected = factorSelection_x())
     })
     
     output$factorChoice_y <- renderUI({
         selectInput('factorChoice_y', 'Factor on Y axis:', 
                     choices = factorsChoice(), multiple = FALSE, selectize = TRUE,
-                    selected = factorsChoice()[2])
+                    selected = factorSelection_y())
     })
 }
 
