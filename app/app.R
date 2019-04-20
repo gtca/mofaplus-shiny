@@ -112,9 +112,11 @@ server <- function(input, output) {
         if (is.null(input$factorChoice_x)) {
             selected_global <- input$factorsChoice
             if (is.null(selected_global)) {
-                return(1)
-            } else {
+                return(factorsChoice()[1])
+            } else if (length(selected_global) >= 1) {
                 return(selected_global[1])
+            } else {
+                return(factorsChoice()[1])
             }
         }
         input$factorChoice_x
@@ -124,11 +126,11 @@ server <- function(input, output) {
         if (is.null(input$factorChoice_x)) {
             selected_global <- input$factorsChoice
             if (is.null(selected_global)) {
-                return(2)
+                return(factorsChoice()[2])
             } else if (length(selected_global) > 1) {
                 return(selected_global[2])
             } else {
-                return(2)
+                return(factorsChoice()[2])
             }
         }
         input$factorChoice_y
