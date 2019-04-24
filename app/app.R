@@ -13,7 +13,7 @@ library(shinyWidgets)
 library(devtools)
 load_all('../../BioFAM/BioFAMtools/')
 
-options(shiny.maxRequestSize = 300*1024^2)
+options(shiny.maxRequestSize = 1000*1024^2)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(theme = "styles.css",
@@ -67,7 +67,9 @@ ui <- fluidPage(theme = "styles.css",
                             column(3, uiOutput("factorChoice_y"))
                          ),
                          hr(),
-                         plotOutput("embeddingsPlot")
+                         plotOutput("embeddingsPlot", 
+                                    brush = brushOpts(id = "plot_brush", fill = "#aaa")),
+                         verbatimTextOutput("embeddingsInfo")
                 )
             ),
             width = 9
@@ -178,6 +180,13 @@ server <- function(input, output) {
         m <- model()
         if (is.null(m)) return(NULL)
         plot_embeddings(m, factors = c(factorSelection_x(), factorSelection_y()), color_by = colourSelection()) 
+    })
+    
+    output$embeddingsInfo <- renderPrint({
+        m <- model()
+        if (is.null(m)) return(NULL)
+        df <- plot_embeddings(m, factors = c(factorSelection_x(), factorSelection_y()), color_by = colourSelection(), return_data = TRUE) 
+        brushedPoints(df, input$plot_brush)
     })
     
     output$factorChoice_x <- renderUI({
