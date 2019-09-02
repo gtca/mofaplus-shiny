@@ -2,7 +2,7 @@
 
 MOFA+ models made interactive with Shiny by RStudio.
 
-See [more on MOFA+ here](https://github.com/biofam/BioFAM/). See [more on Shiny apps here](http://shiny.rstudio.com/tutorial/).
+See [more on MOFA+ here](https://github.com/biofam/MOFA2/). See [more on Shiny apps here](http://shiny.rstudio.com/tutorial/).
 
 ## Getting started
 
