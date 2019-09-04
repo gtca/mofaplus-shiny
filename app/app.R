@@ -108,14 +108,14 @@ server <- function(input, output) {
     factorsChoice <- reactive({
         m <- model()
         if (is.null(m)) return(NULL)
-        factors_names(m)
+        factors(m)
     })
     
     metaChoice <- reactive({
         m <- model()
         if (is.null(m)) return(NULL)
         metadata_names <- colnames(samples_metadata(m))
-        metadata_names[metadata_names != "sample_name"]
+        metadata_names[metadata_names != "sample"]
     })
 
     factorsSelection <- reactive({
