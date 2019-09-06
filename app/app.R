@@ -31,6 +31,8 @@ ui <- fluidPage(theme = "styles.css",
                       label = "Model HDF5 file:",
                       buttonLabel = "Model file",
                       accept = "hdf5"),
+            uiOutput("viewsChoice"),
+            uiOutput("groupsChoice"),
             uiOutput("factorsChoice"),
             uiOutput("colourChoice"),
             width = 3
@@ -51,6 +53,7 @@ ui <- fluidPage(theme = "styles.css",
                 ),
                 tabPanel("Loadings", 
                          fluidRow(
+                            column(2, uiOutput("loadingsViewSelection")),
                             column(5, sliderInput(inputId = "nfeatures_to_label",
                                                   label = "Number of features to label",
                                                   min = 0,
@@ -65,9 +68,11 @@ ui <- fluidPage(theme = "styles.css",
                 tabPanel("Factors", 
                          fluidRow(
                             column(2, uiOutput("factorsAxisChoice_x")),
-                            column(3, uiOutput("factorsGroupsChoice")),
-                            column(2, materialSwitch(inputId = "factorsAddDots", label = "Add dots", status = "default", value = TRUE)),
-                            column(2, materialSwitch(inputId = "factorsAddViolins", label = "Add violins", status = "default", value = FALSE))
+                            # column(3, uiOutput("factorsGroupsChoice")),
+                            column(1, switchInput(inputId = "factorsAddDots", label = "Points", value = TRUE),
+                                      style = "margin-top: 25px; margin-right: 25px;"),
+                            column(1, switchInput(inputId = "factorsAddViolins", label = "Violins", value = FALSE),
+                                      style = "margin-top: 25px; margin-right: 25px;")
                          ),
                          hr(),
                          plotOutput("factorsPlot")
@@ -78,7 +83,8 @@ ui <- fluidPage(theme = "styles.css",
                             column(1, actionButton("swapEmbeddings", "", 
                                                    icon("exchange-alt"),
                                                    style = "margin: 25px 0;")),
-                            column(3, uiOutput("factorChoice_y"))
+                            column(3, uiOutput("factorChoice_y")),
+                            column(3, uiOutput("factorsGroupsChoice_xy"))
                          ),
                          hr(),
                          plotOutput("embeddingsPlot", 
@@ -111,11 +117,38 @@ server <- function(input, output) {
         factors(m)
     })
     
+    viewsChoice <- reactive({
+        m <- model()
+        if (is.null(m)) return(NULL)
+        views(m)
+    })
+    
+    groupsChoice <- reactive({
+        m <- model()
+        if (is.null(m)) return(NULL)
+        groups(m)
+    })
+    
     metaChoice <- reactive({
         m <- model()
         if (is.null(m)) return(NULL)
         metadata_names <- colnames(samples_metadata(m))
         metadata_names[metadata_names != "sample"]
+    })
+
+    ### Remembering selected subset of views, groups, factors, etc.
+
+    viewsSelection <- reactive({
+        if (is.null(input$viewsChoice))
+            return("all")
+        input$viewsChoice
+    })
+
+
+    groupsSelection <- reactive({
+        if (is.null(input$groupsChoice))
+            return("all")
+        input$groupsChoice
     })
 
     factorsSelection <- reactive({
@@ -128,6 +161,14 @@ server <- function(input, output) {
         if (is.null(input$colourChoice))
             return("group_name")
         input$colourChoice
+    })
+
+    ### LOADINGS ###
+
+    loadingsViewSelection <- reactive({
+        if (is.null(input$loadingsViewSelection))
+            return(1)
+        input$loadingsViewSelection
     })
     
     ### EMBERDDINGS ###
@@ -190,6 +231,14 @@ server <- function(input, output) {
     #################
     
     
+    output$viewsChoice <- renderUI({
+        selectInput('viewsChoice', 'Views:', choices = viewsChoice(), multiple = TRUE, selectize = TRUE)
+    })
+
+    output$groupsChoice <- renderUI({
+        selectInput('groupsChoice', 'Groups:', choices = groupsChoice(), multiple = TRUE, selectize = TRUE)
+    })
+
     output$factorsChoice <- renderUI({
         selectInput('factorsChoice', 'Factors:', choices = factorsChoice(), multiple = TRUE, selectize = TRUE)
     })
@@ -203,7 +252,18 @@ server <- function(input, output) {
     output$dataOverviewPlot <- renderPlot({
         m <- model()
         if (is.null(m)) return(NULL)
-        plot_data_overview(m)
+        # Use custom colour palette
+        shiny_palette <- c("#B1BED5", "#BFD8D5", "#DFDFDF", "#6392A3", "f4f3f3")
+        n_views <- get_dimensions(m)$M
+        if (n_views <= length(shiny_palette)) {
+            shiny_colours <- shiny_palette[seq_len(n_views)] 
+        } else {
+            shiny_colours <- rainbow(n_views)
+        }
+        names(shiny_colours) <- views(m)
+        plot_data_overview(m, colors = shiny_colours) +
+            theme(strip.text.x = element_text(size = 16, colour = "#333333"), 
+                  axis.text.y = element_text(size = 16, colour = "#333333"))
     })
 
     ### VARIANCE EXPLAINED ###
@@ -211,17 +271,25 @@ server <- function(input, output) {
     output$varianceExplainedPlot <- renderPlot({
         m <- model()
         if (is.null(m)) return(NULL)
-        plot_variance_explained(m, factors = factorsSelection(), 
+        plot_variance_explained(m, 
+                                views = viewsSelection(), groups = groupsSelection(), factors = factorsSelection(), 
                                 x = 'group', y = 'factor',
-                                plot_total = FALSE)
+                                plot_total = FALSE, use_cache = FALSE) +
+            scale_fill_gradientn(colors=c("#f5f9ff", "#01579b"), guide="colorbar") +
+            theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+                  strip.text.x = element_text(size = 14, colour = "#333333"))
     })
 
     ### WEIGHTS (LOADINGS) ###
 
+    output$loadingsViewSelection <- renderUI({
+        selectInput('loadingsViewSelection', 'View:', choices = viewsChoice(), multiple = FALSE, selectize = TRUE)
+    })
+
     output$weightsPlot <- renderPlot({
         m <- model()
         if (is.null(m)) return(NULL)
-        plot_weights(m, factors = factorsSelection(), nfeatures = input$nfeatures_to_label)
+        plot_weights(m, view = loadingsViewSelection(), factors = factorsSelection(), nfeatures = input$nfeatures_to_label)
     })
 
     # output$weightsInfo <- renderPrint({
@@ -238,7 +306,7 @@ server <- function(input, output) {
         m <- model()
         if (is.null(m)) return(NULL)
         plot_factor(m, factors = factorsSelection(), color_by = colourSelection(), group_by = factorsAxisSelection_x(), 
-                    groups = input$factorsGroupsChoice, add_dots = input$factorsAddDots, add_violin = input$factorsAddViolins)
+                    groups = groupsSelection(), add_dots = input$factorsAddDots, add_violin = input$factorsAddViolins)
     })
 
     output$factorsAxisChoice_x <- renderUI({
@@ -247,24 +315,18 @@ server <- function(input, output) {
                     selected = factorsAxisSelection_x())
     })
 
-    output$factorsGroupsChoice <- renderUI({
-        selectInput('factorsGroupsChoice', 'Display groups:',
-                    choices = factorsGroupsChoice(), multiple = TRUE, selectize = TRUE,
-                    selected = factorsGroupsChoice())
-    })
-
     ### FACTORS SCATTERPLOT (EMBEDDINGS) ###
     
     output$embeddingsPlot <- renderPlot({
         m <- model()
         if (is.null(m)) return(NULL)
-        plot_factors(m, factors = c(factorSelection_x(), factorSelection_y()), color_by = colourSelection()) 
+        plot_factors(m, groups = groupsSelection(), factors = c(factorSelection_x(), factorSelection_y()), color_by = colourSelection()) 
     })
     
     output$embeddingsInfo <- renderPrint({
         m <- model()
         if (is.null(m)) return(NULL)
-        df <- plot_factors(m, factors = c(factorSelection_x(), factorSelection_y()), color_by = colourSelection(), return_data = TRUE) 
+        df <- plot_factors(m, groups = groupsSelection(), factors = c(factorSelection_x(), factorSelection_y()), color_by = colourSelection(), return_data = TRUE) 
         brushedPoints(df, input$plot_brush)
     })
     
@@ -279,6 +341,12 @@ server <- function(input, output) {
                     choices = factorsChoice(), multiple = FALSE, selectize = TRUE,
                     selected = factorSelection_y())
     })
+
+    # output$factorsGroupsChoice_xy <- renderUI({
+    #     selectInput('factorsGroupsChoice_xy', 'Display groups:',
+    #                 choices = factorsGroupsChoice(), multiple = TRUE, selectize = TRUE,
+    #                 selected = factorsGroupsChoice())
+    # })
     
     
     observeEvent(input$swapEmbeddings, {
