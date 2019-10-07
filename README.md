@@ -12,3 +12,21 @@ To run the app, you can clone the repository and start the Shiny app directly fr
 git clone https://github.com/gtca/mofaplus-shiny
 R -e "shiny::runApp('mofaplus-shiny/app')"
 ```
+
+MOFA+ shiny app can also be run from a Docker container. 
+
+```
+# In the current version of the Dockerfile
+# the MOFA2 repository folder should be in the root folder
+# of the mofaplus-shiny directory
+docker build -t mofa2shiny .
+```
+
+To start the shiny app from the container, run
+
+```
+docker run -ti -p 4780:4780 --rm mofa2shiny 
+```
+
+and open a tab with the respective host port address in your web browser (e.g. [localhost:4780](localhost:4780/#)).
+
