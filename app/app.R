@@ -10,9 +10,8 @@
 library(shiny)
 library(shinyWidgets)
 
-library(devtools)
-#library(MOFA2)
-load_all('../../MOFA2/MOFA2')
+library(ggplot2)
+library(MOFA2)
 
 options(shiny.maxRequestSize = 1000*1024^2)
 
@@ -275,7 +274,7 @@ server <- function(input, output) {
                                 views = viewsSelection(), groups = groupsSelection(), factors = factorsSelection(), 
                                 x = 'group', y = 'factor',
                                 plot_total = FALSE, use_cache = FALSE) +
-            scale_fill_gradientn(colors=c("#f5f9ff", "#01579b"), guide="colorbar") +
+            scale_fill_gradient(colors=c("#f5f9ff", "#01579b"), guide="colorbar") +
             theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
                   strip.text.x = element_text(size = 14, colour = "#333333"))
     })

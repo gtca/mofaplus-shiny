@@ -25,8 +25,8 @@ docker build -t mofa2shiny .
 To start the shiny app from the container, run
 
 ```
-docker run -ti -p 4780:4780 --rm mofa2shiny 
+docker run -ti -p 3838:3838 --rm mofa2shiny 
 ```
 
-and open a tab with the respective host port address in your web browser (e.g. [localhost:4780](localhost:4780/#)).
+and open a tab with the respective host port address in your web browser (e.g. [localhost:3838](http://127.0.0.1:3838/)).
 
