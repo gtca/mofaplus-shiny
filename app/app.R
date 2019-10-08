@@ -10,6 +10,7 @@
 library(shiny)
 library(shinyWidgets)
 
+library(tools)
 library(ggplot2)
 library(MOFA2)
 
@@ -25,11 +26,11 @@ ui <- fluidPage(theme = "styles.css",
     # Sidebar with main model parameters choices
     sidebarLayout(
         sidebarPanel(
-            # HDF5 model file picker
-            fileInput(inputId = "model_hdf_file",
-                      label = "Model HDF5 file:",
+            # Model file picker (HDF5 or RDS file)
+            fileInput(inputId = "model_file",
+                      label = "Model file:",
                       buttonLabel = "Model file",
-                      accept = "hdf5"),
+                      accept = c("hdf5", "rds")),
             uiOutput("viewsChoice"),
             uiOutput("groupsChoice"),
             uiOutput("factorsChoice"),
@@ -105,9 +106,16 @@ server <- function(input, output) {
     ### GLOBAL VARIABLES ###
     
     model <- reactive({
-        input_model <- input$model_hdf_file
+        input_model <- input$model_file
         if (is.null(input_model)) return(NULL)
-        load_model(input_model$datapath)
+        print(file_ext(input_model$name))
+        if (file_ext(input_model$name) %in% c("hdf5", "h5")) {
+          load_model(input_model$datapath)
+        } else if (file_ext(input_model$name) %in% c("rds", "RDS")) {
+          readRDS(input_model$datapath)
+        } else {
+          return(NULL)
+        }
     })
     
     factorsChoice <- reactive({
@@ -274,7 +282,7 @@ server <- function(input, output) {
                                 views = viewsSelection(), groups = groupsSelection(), factors = factorsSelection(), 
                                 x = 'group', y = 'factor',
                                 plot_total = FALSE, use_cache = FALSE) +
-            scale_fill_gradient(colors=c("#f5f9ff", "#01579b"), guide="colorbar") +
+            scale_fill_gradient(low = "#f5f9ff", high = "#01579b", guide="colorbar") +
             theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
                   strip.text.x = element_text(size = 14, colour = "#333333"))
     })
