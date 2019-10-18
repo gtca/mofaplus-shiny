@@ -90,6 +90,13 @@ ui <- fluidPage(theme = "styles.css",
                          plotOutput("embeddingsPlot", 
                                     brush = brushOpts(id = "plot_brush", fill = "#aaa")),
                          verbatimTextOutput("embeddingsInfo")
+                ),
+                tabPanel("Dim reduction", 
+                         fluidRow(
+                            column(2, uiOutput("manifoldChoice"))
+                         ),
+                         hr(),
+                         plotOutput("dimredPlot")
                 )
             ),
             width = 9
@@ -141,6 +148,16 @@ server <- function(input, output) {
         if (is.null(m)) return(NULL)
         metadata_names <- colnames(samples_metadata(m))
         metadata_names[metadata_names != "sample"]
+    })
+    
+    dimredChoice <- reactive({
+        m <- model()
+        if (is.null(m)) return(NULL)
+        if (!.hasSlot(m, "dim_red") || (length(m@dim_red) == 0)) 
+            return(c("UMAP"))  # to be computed
+            # no t-SNE due to its frequent problems with 
+            # perplexity too high for small datasets
+        names(m@dim_red)
     })
 
     ### Remembering selected subset of views, groups, factors, etc.
@@ -211,17 +228,14 @@ server <- function(input, output) {
     ### FACTOR VALUES ###
 
     factorsAxisSelection_x <- reactive({
-        if (is.null(input$colourChoice)) {
-            selected_global <- input$colourChoice
-            if (is.null(selected_global)) {
-                return(metaChoice()[1])
-            } else if (length(selected_global) >= 1) {
-                return(selected_global[1])
-            } else {
-                return(metaChoice()[1])
-            }
+        selected_global <- input$colourChoice
+        if (is.null(selected_global)) {
+            return(metaChoice()[1])
+        } else if (length(selected_global) >= 1) {
+            return(selected_global[1])
+        } else {
+            return(metaChoice()[1])
         }
-        input$colourChoice
     })
 
 
@@ -230,7 +244,19 @@ server <- function(input, output) {
         if (is.null(m)) return(NULL)
         as.character(unique(samples_metadata(m)[,factorsAxisSelection_x()]))
     })
-    
+
+
+    ### MANIFOLD VALUES ###
+    manifoldSelection <- reactive({
+        selected_global <- input$manifoldChoice    
+        if (is.null(selected_global)) {
+            return(dimredChoice()[1])
+        } else if (length(selected_global) >= 1) {
+            return(selected_global[1])
+        } else {
+            return(dimredChoice()[1])
+        }
+    })
 
 
     #################
@@ -373,6 +399,27 @@ server <- function(input, output) {
             })
         }
     })
+
+
+    ### DIMENSIONALITY REDUCTION PLOT ###
+
+    output$manifoldChoice <- renderUI({
+        selectInput('manifoldChoice', 'Manifold:',
+                    choices = dimredChoice(), multiple = FALSE, selectize = TRUE,
+                    selected = manifoldSelection())
+    })
+    
+    output$dimredPlot <- renderPlot({
+        m <- model()
+        method <- manifoldSelection()
+        if (is.null(m) || is.null(method) || (method == "")) {
+            return(NULL)
+        } else {
+            plot_dimred(m, method, groups = groupsSelection(), factors = factorsSelection(), color_by = colourSelection()) 
+        }
+    })
+    
+    
 }
 
 # Run the application 
