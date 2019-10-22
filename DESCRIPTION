@@ -1,0 +1,14 @@
+Package: mofaplusshiny
+Title: Shiny App for MOFA+
+Version: 0.99.0
+Authors@R: 
+    person(given = "Danila",
+           family = "Bredikhin",
+           role = c("aut", "cre"),
+           email = "danila.bredikhin@embl.de",
+           comment = c(ORCID = "0000-0001-8089-6983"))
+Description: Launch a Shiny server to explore trained MOFA+ models.
+License: MIT
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.1.1
