@@ -14,7 +14,7 @@ library(tools)
 library(ggplot2)
 library(MOFA2)
 
-options(shiny.maxRequestSize = 1000*1024^2)
+options(shiny.maxRequestSize = 1500*1024^2)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(theme = "styles.css",
@@ -198,29 +198,25 @@ server <- function(input, output) {
     ### EMBERDDINGS ###
     
     factorSelection_x <- reactive({
-        if (is.null(input$factorChoice_x)) {
-            selected_global <- input$factorsChoice
-            if (is.null(selected_global)) {
-                return(factorsChoice()[1])
-            } else if (length(selected_global) >= 1) {
-                return(selected_global[1])
-            } else {
-                return(factorsChoice()[1])
-            }
+        selected_global <- input$factorsChoice
+        if (is.null(selected_global)) {
+            return(factorsChoice()[1])
+        } else if (length(selected_global) >= 1) {
+            return(selected_global[1])
+        } else {
+            return(factorsChoice()[1])
         }
         input$factorChoice_x
     })
     
     factorSelection_y <- reactive({
-        if (is.null(input$factorChoice_x)) {
-            selected_global <- input$factorsChoice
-            if (is.null(selected_global)) {
-                return(factorsChoice()[2])
-            } else if (length(selected_global) > 1) {
-                return(selected_global[2])
-            } else {
-                return(factorsChoice()[2])
-            }
+        selected_global <- input$factorsChoice
+        if (is.null(selected_global)) {
+            return(factorsChoice()[2])
+        } else if (length(selected_global) > 1) {
+            return(selected_global[2])
+        } else {
+            return(factorsChoice()[2])
         }
         input$factorChoice_y
     })
@@ -228,7 +224,7 @@ server <- function(input, output) {
     ### FACTOR VALUES ###
 
     factorsAxisSelection_x <- reactive({
-        selected_global <- input$colourChoice
+        selected_global <- input$factorsAxisChoice_x
         if (is.null(selected_global)) {
             return(metaChoice()[1])
         } else if (length(selected_global) >= 1) {
