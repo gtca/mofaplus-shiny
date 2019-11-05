@@ -304,7 +304,6 @@ server <- function(input, output) {
                                 views = viewsSelection(), groups = groupsSelection(), factors = factorsSelection(), 
                                 x = 'group', y = 'factor',
                                 plot_total = FALSE, use_cache = FALSE) +
-            scale_fill_gradient(low = "#f5f9ff", high = "#01579b", guide="colorbar") +
             theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
                   strip.text.x = element_text(size = 14, colour = "#333333"))
     })
