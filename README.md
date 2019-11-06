@@ -18,7 +18,7 @@ MOFA+ shiny app can also be run from a Docker container:
 You can pull an image from DockerHub
 
 ```
-docker pul gtca/mofa2shiny:latest
+docker pull gtca/mofa2shiny:latest
 ```
 
 or build it yourself:
