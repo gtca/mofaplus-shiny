@@ -13,12 +13,22 @@ git clone https://github.com/gtca/mofaplus-shiny
 R -e "shiny::runApp('mofaplus-shiny/app')"
 ```
 
-MOFA+ shiny app can also be run from a Docker container. 
+MOFA+ shiny app can also be run from a Docker container:
+
+You can pull an image from DockerHub
+
+```
+docker pul gtca/mofa2shiny:latest
+```
+
+or build it yourself:
 
 ```
 # In the current version of the Dockerfile
 # the MOFA2 repository folder should be in the root folder
-# of the mofaplus-shiny directory
+# of the mofaplus-shiny directory:
+git clone git@github.com:BioFAM/MOFA2.git
+
 docker build -t mofa2shiny .
 ```
 
