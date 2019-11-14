@@ -60,6 +60,8 @@ ui <- fluidPage(theme = "styles.css",
                                                   max = 100,
                                                   value = 10,
                                                   step = 1))
+                            # ,
+                            # column(2, downloadButton("saveButtonLoadings", "Save loadings"))
                          ),
                          plotOutput("weightsPlot")
                          # plotOutput("weightsPlot", hover = "weightsHover")
@@ -413,7 +415,16 @@ server <- function(input, output) {
             plot_dimred(m, method, groups = groupsSelection(), factors = factorsSelection(), color_by = colourSelection()) 
         }
     })
-    
+
+
+    # # Saving the plots
+    # output$saveButtonLoadings <- downloadHandler(
+    #     filename = "mofa2_plot.pdf",
+    #     content = function(file) {
+    #         ggsave(file, device = "pdf",
+    #                plot = plot_weights(model(), view = loadingsViewSelection(), factors = factorsSelection(), nfeatures = input$nfeatures_to_label))
+    #     }
+    # )
     
 }
 
