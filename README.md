@@ -24,11 +24,6 @@ docker pull gtca/mofa2shiny:latest
 or build it yourself:
 
 ```
-# In the current version of the Dockerfile
-# the MOFA2 repository folder should be in the root folder
-# of the mofaplus-shiny directory:
-git clone git@github.com:BioFAM/MOFA2.git
-
 docker build -t mofa2shiny .
 ```
 
