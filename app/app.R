@@ -90,7 +90,7 @@ ui <- fluidPage(theme = "styles.css",
                          ),
                          hr(),
                          plotOutput("embeddingsPlot", 
-                                    brush = brushOpts(id = "plot_brush", fill = "#aaa")),
+                                    brush = brushOpts(id = "plot_factors", fill = "#aaa")),
                          verbatimTextOutput("embeddingsInfo")
                 ),
                 tabPanel("Dim reduction", 
@@ -347,19 +347,6 @@ server <- function(input, output) {
 
     ### FACTORS SCATTERPLOT (EMBEDDINGS) ###
     
-    output$embeddingsPlot <- renderPlot({
-        m <- model()
-        if (is.null(m)) return(NULL)
-        plot_factors(m, groups = groupsSelection(), factors = c(factorSelection_x(), factorSelection_y()), color_by = colourSelection()) 
-    })
-    
-    output$embeddingsInfo <- renderPrint({
-        m <- model()
-        if (is.null(m)) return(NULL)
-        df <- plot_factors(m, groups = groupsSelection(), factors = c(factorSelection_x(), factorSelection_y()), color_by = colourSelection(), return_data = TRUE) 
-        brushedPoints(df, input$plot_brush)
-    })
-    
     output$factorChoice_x <- renderUI({
         selectInput('factorChoice_x', 'Factor on X axis:', 
                     choices = factorsChoice(), multiple = FALSE, selectize = TRUE,
@@ -370,6 +357,19 @@ server <- function(input, output) {
         selectInput('factorChoice_y', 'Factor on Y axis:', 
                     choices = factorsChoice(), multiple = FALSE, selectize = TRUE,
                     selected = factorSelection_y())
+    })
+    
+    output$embeddingsPlot <- renderPlot({
+        m <- model()
+        if (is.null(m)) return(NULL)
+        plot_factors(m, groups = groupsSelection(), factors = c(input$factorChoice_x, input$factorChoice_y), color_by = colourSelection()) 
+    })
+    
+    output$embeddingsInfo <- renderPrint({
+        m <- model()
+        if (is.null(m)) return(NULL)
+        df <- plot_factors(m, groups = groupsSelection(), factors = c(input$factorChoice_x, input$factorChoice_y), color_by = colourSelection(), return_data = TRUE) 
+        brushedPoints(df, input$plot_factors)
     })
 
     # output$factorsGroupsChoice_xy <- renderUI({
