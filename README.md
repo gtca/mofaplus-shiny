@@ -2,9 +2,9 @@
 
 MOFA+ models made interactive with Shiny by RStudio.
 
-[![Live app](./deployed_badge.png | width=100)](http://www.ebi.ac.uk/shiny/mofa/)
-
 See [more on MOFA+ here](https://github.com/biofam/MOFA2/). See [more on Shiny apps here](http://shiny.rstudio.com/tutorial/).image link
+
+[<img src="./deployed_badge.png" data-canonical-src="./deployed_badge.png" width="200"/>](http://www.ebi.ac.uk/shiny/mofa/)
 
 ## Getting started
 
