@@ -304,7 +304,6 @@ server <- function(input, output) {
         if (is.null(m)) return(NULL)
         plot_variance_explained(m, 
                                 views = viewsSelection(), groups = groupsSelection(), factors = factorsSelection(), 
-                                x = 'group', y = 'factor',
                                 plot_total = FALSE, use_cache = FALSE) +
             theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
                   strip.text.x = element_text(size = 14, colour = "#333333"))
