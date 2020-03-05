@@ -51,9 +51,9 @@ ui <- fluidPage(theme = "styles.css",
                          # TODO: embed multiple plots on one page
                          plotOutput("varianceExplainedPlot")
                 ),
-                tabPanel("Loadings", 
+                tabPanel("Weights", 
                          fluidRow(
-                            column(2, uiOutput("loadingsViewSelection")),
+                            column(2, uiOutput("weightsViewSelection")),
                             column(5, sliderInput(inputId = "nfeatures_to_label",
                                                   label = "Number of features to label",
                                                   min = 0,
@@ -67,7 +67,7 @@ ui <- fluidPage(theme = "styles.css",
                          # plotOutput("weightsPlot", hover = "weightsHover")
                          # verbatimTextOutput("weightsInfo")
                 ),
-                tabPanel("Factors", 
+                tabPanel("Factors beeswarm", 
                          fluidRow(
                             column(2, uiOutput("factorsAxisChoice_x")),
                             # column(3, uiOutput("factorsGroupsChoice")),
@@ -79,7 +79,7 @@ ui <- fluidPage(theme = "styles.css",
                          hr(),
                          plotOutput("factorsPlot")
                 ),
-                tabPanel("Embeddings", 
+                tabPanel("Factors scatter", 
                          fluidRow(
                             column(3, uiOutput("factorChoice_x")),
                             column(1, actionButton("swapEmbeddings", "", 
@@ -93,7 +93,7 @@ ui <- fluidPage(theme = "styles.css",
                                     brush = brushOpts(id = "plot_factors", fill = "#aaa")),
                          verbatimTextOutput("embeddingsInfo")
                 ),
-                tabPanel("Dim reduction", 
+                tabPanel("Embeddings", 
                          fluidRow(
                             column(2, uiOutput("manifoldChoice"))
                          ),
@@ -191,10 +191,10 @@ server <- function(input, output) {
 
     ### LOADINGS ###
 
-    loadingsViewSelection <- reactive({
-        if (is.null(input$loadingsViewSelection))
+    weightsViewSelection <- reactive({
+        if (is.null(input$weightsViewSelection))
             return(1)
-        input$loadingsViewSelection
+        input$weightsViewSelection
     })
     
     ### EMBERDDINGS ###
@@ -311,14 +311,14 @@ server <- function(input, output) {
 
     ### WEIGHTS (LOADINGS) ###
 
-    output$loadingsViewSelection <- renderUI({
-        selectInput('loadingsViewSelection', 'View:', choices = viewsChoice(), multiple = FALSE, selectize = TRUE)
+    output$weightsViewSelection <- renderUI({
+        selectInput('weightsViewSelection', 'View:', choices = viewsChoice(), multiple = FALSE, selectize = TRUE)
     })
 
     output$weightsPlot <- renderPlot({
         m <- model()
         if (is.null(m)) return(NULL)
-        plot_weights(m, view = loadingsViewSelection(), factors = factorsSelection(), nfeatures = input$nfeatures_to_label)
+        plot_weights(m, view = weightsViewSelection(), factors = factorsSelection(), nfeatures = input$nfeatures_to_label)
     })
 
     # output$weightsInfo <- renderPrint({
