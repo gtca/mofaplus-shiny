@@ -130,19 +130,19 @@ server <- function(input, output) {
     factorsChoice <- reactive({
         m <- model()
         if (is.null(m)) return(NULL)
-        factors(m)
+        factors_names(m)
     })
     
     viewsChoice <- reactive({
         m <- model()
         if (is.null(m)) return(NULL)
-        views(m)
+        views_names(m)
     })
     
     groupsChoice <- reactive({
         m <- model()
         if (is.null(m)) return(NULL)
-        groups(m)
+        groups_names(m)
     })
     
     metaChoice <- reactive({
@@ -150,6 +150,14 @@ server <- function(input, output) {
         if (is.null(m)) return(NULL)
         metadata_names <- colnames(samples_metadata(m))
         metadata_names[metadata_names != "sample"]
+    })
+
+    metaAndFeatureChoice <- reactive({
+        m <- model()
+        if (is.null(m)) return(NULL)
+        choices_names <- colnames(samples_metadata(m))
+        choices_names <- choices_names[choices_names != "sample"]
+        c(choices_names, features_names(m))
     })
     
     dimredChoice <- reactive({
@@ -275,7 +283,7 @@ server <- function(input, output) {
     })
     
     output$colourChoice <- renderUI({
-        selectInput('colourChoice', 'Colour cells:', choices = metaChoice(), multiple = FALSE, selectize = TRUE)
+        selectInput('colourChoice', 'Colour cells:', choices = metaAndFeatureChoice(), multiple = FALSE, selectize = TRUE)
     })
 
     ### MODEL OVERVIEW ###
@@ -291,7 +299,7 @@ server <- function(input, output) {
         } else {
             shiny_colours <- rainbow(n_views)
         }
-        names(shiny_colours) <- views(m)
+        names(shiny_colours) <- views_names(m)
         plot_data_overview(m, colors = shiny_colours) +
             theme(strip.text.x = element_text(size = 16, colour = "#333333"), 
                   axis.text.y = element_text(size = 16, colour = "#333333"))
