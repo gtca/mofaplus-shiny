@@ -175,6 +175,16 @@ server <- function(input, output) {
         choices_names <- choices_names[choices_names != "sample"]
         c(choices_names, features_names(m))
     })
+
+    metaFeatureFactorChoice <- reactive({
+        m <- model()
+        if (is.null(m)) return(NULL)
+        choices_names <- colnames(samples_metadata(m))
+        choices_names <- choices_names[choices_names != "sample"]
+        c(list("metadata" = choices_names), 
+          features_names(m),
+          list("factors" = factors_names(m)))
+    })
     
     dimredChoice <- reactive({
         m <- model()
@@ -307,7 +317,7 @@ server <- function(input, output) {
     })
     
     output$colourChoice <- renderUI({
-        selectInput('colourChoice', 'Colour cells:', choices = metaAndFeatureChoice(), multiple = FALSE, selectize = TRUE)
+        selectInput('colourChoice', 'Colour cells:', choices = metaFeatureFactorChoice(), multiple = FALSE, selectize = TRUE)
     })
 
     ### MODEL OVERVIEW ###
@@ -385,9 +395,11 @@ server <- function(input, output) {
     output$dataHeatmapPlot <- renderPlot({
         m <- model()
         if (is.null(m)) return(NULL)
+        annotation_samples <- NULL
+        if (colourSelection() %in% colnames(samples_metadata(m))) annotation_samples <- colourSelection()
         plot_data_heatmap(m, view = viewsSelection(), groups = groupsSelection(), 
                           factor = dataFactorSelection(), features = input$nfeatures_to_plot,
-                          annotation_samples = colourSelection())
+                          annotation_samples = annotation_samples)
     })
 
     output$dataScatterPlot <- renderPlot({
