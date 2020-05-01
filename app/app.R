@@ -43,75 +43,78 @@ ui <- fluidPage(theme = "styles.css",
         mainPanel(
             tabsetPanel(
                 tabPanel("Data overview", 
+                    p("", class="description"),
                     plotOutput("dataOverviewPlot")
                 ),
                 tabPanel("Variance", 
-                         # TODO: selector x, y
-                         # TODO: selector group_by
-                         # TODO: embed multiple plots on one page
-                         plotOutput("varianceExplainedPlot")
+                    p("", class="description"),
+                    # TODO: selector x, y
+                    # TODO: selector group_by
+                    # TODO: embed multiple plots on one page
+                    plotOutput("varianceExplainedPlot")
                 ),
                 tabPanel("Weights", 
-                         fluidRow(
-                            column(2, uiOutput("weightsViewSelection")),
-                            column(5, sliderInput(inputId = "nfeatures_to_label",
-                                                  label = "Number of features to label",
-                                                  min = 0,
-                                                  max = 100,
-                                                  value = 10,
-                                                  step = 1))
-                            # ,
-                            # column(2, downloadButton("saveButtonLoadings", "Save loadings"))
-                         ),
-                         plotOutput("weightsPlot")
-                         # plotOutput("weightsPlot", hover = "weightsHover")
-                         # verbatimTextOutput("weightsInfo")
+                    p("Visualize factor weights as a first step to interpret factors.", class="description"),
+                    fluidRow(
+                       column(2, uiOutput("weightsViewSelection")),
+                       column(5, sliderInput(inputId = "nfeatures_to_label",
+                                             label = "Number of features to label:",
+                                             min = 0,
+                                             max = 100,
+                                             value = 10,
+                                             step = 1))
+                    ),
+                    plotOutput("weightsPlot")
+                ),
+                tabPanel("Factor exploration",
+                    p("Explore factors one by one by plotting original data values for their top weights.", class="description"),
+                    fluidRow(
+                       column(2, uiOutput("dataFactorSelection")),
+                       column(5, sliderInput(inputId = "nfeatures_to_plot",
+                                             label = "Number of top features to plot:",
+                                             min = 0,
+                                             max = 100,
+                                             value = 10,
+                                             step = 1))
+                    ),
+                    plotOutput("dataHeatmapPlot"),
+                    plotOutput("dataScatterPlot")
                 ),
                 tabPanel("Factors beeswarm", 
-                         fluidRow(
-                            column(2, uiOutput("factorsAxisChoice_x")),
-                            # column(3, uiOutput("factorsGroupsChoice")),
-                            column(1, switchInput(inputId = "factorsAddDots", label = "Points", value = TRUE),
-                                      style = "margin-top: 25px; margin-right: 25px;"),
-                            column(1, switchInput(inputId = "factorsAddViolins", label = "Violins", value = FALSE),
-                                      style = "margin-top: 25px; margin-right: 25px;")
-                         ),
-                         hr(),
-                         plotOutput("factorsPlot")
-                ),
-                tabPanel("Data", 
-                        fluidRow(
-                           column(2, uiOutput("dataFactorSelection")),
-                           column(5, sliderInput(inputId = "nfeatures_to_plot",
-                                                 label = "Number of features to plot",
-                                                 min = 0,
-                                                 max = 100,
-                                                 value = 10,
-                                                 step = 1))
-                        ),
-                        plotOutput("dataHeatmapPlot"),
-                        plotOutput("dataScatterPlot")
+                    p("Visualize factor values and explore their distribution in different sets of samples", class="description"),
+                    fluidRow(
+                       column(2, uiOutput("factorsAxisChoice_x")),
+                       # column(3, uiOutput("factorsGroupsChoice")),
+                       column(1, switchInput(inputId = "factorsAddDots", label = "Points", value = TRUE),
+                                 style = "margin-top: 25px; margin-right: 25px;"),
+                       column(1, switchInput(inputId = "factorsAddViolins", label = "Violins", value = FALSE),
+                                 style = "margin-top: 25px; margin-right: 25px;")
+                    ),
+                    hr(),
+                    plotOutput("factorsPlot")
                 ),
                 tabPanel("Factors scatter", 
-                         fluidRow(
-                            column(3, uiOutput("factorChoice_x")),
-                            column(1, actionButton("swapEmbeddings", "", 
-                                                   icon("exchange-alt"),
-                                                   style = "margin: 25px 0;")),
-                            column(3, uiOutput("factorChoice_y")),
-                            column(3, uiOutput("factorsGroupsChoice_xy"))
-                         ),
-                         hr(),
-                         plotOutput("embeddingsPlot", 
-                                    brush = brushOpts(id = "plot_factors", fill = "#aaa")),
-                         verbatimTextOutput("embeddingsInfo")
+                    p("Visualize pairs of factors to study how they separate different sets of samples.", class="description"),
+                    fluidRow(
+                       column(3, uiOutput("factorChoice_x")),
+                       column(1, actionButton("swapEmbeddings", "", 
+                                              icon("exchange-alt"),
+                                              style = "margin: 25px 0;")),
+                       column(3, uiOutput("factorChoice_y")),
+                       column(3, uiOutput("factorsGroupsChoice_xy"))
+                    ),
+                    hr(),
+                    plotOutput("embeddingsPlot", 
+                               brush = brushOpts(id = "plot_factors", fill = "#aaa")),
+                    verbatimTextOutput("embeddingsInfo")
                 ),
                 tabPanel("Embeddings", 
-                         fluidRow(
-                            column(2, uiOutput("manifoldChoice"))
-                         ),
-                         hr(),
-                         plotOutput("dimredPlot")
+                    p("Run non-linear dimensionality reduction method on factors.", class="description"),
+                    fluidRow(
+                       column(2, uiOutput("manifoldChoice"))
+                    ),
+                    hr(),
+                    plotOutput("dimredPlot")
                 )
             ),
             width = 9
@@ -177,7 +180,7 @@ server <- function(input, output) {
         m <- model()
         if (is.null(m)) return(NULL)
         if (!.hasSlot(m, "dim_red") || (length(m@dim_red) == 0)) 
-            return(c("UMAP"))  # to be computed
+            return(c("UMAP", "TSNE"))  # to be computed
             # no t-SNE due to its frequent problems with 
             # perplexity too high for small datasets
         names(m@dim_red)
@@ -383,7 +386,8 @@ server <- function(input, output) {
         m <- model()
         if (is.null(m)) return(NULL)
         plot_data_heatmap(m, view = viewsSelection(), groups = groupsSelection(), 
-                          factor = dataFactorSelection(), features = input$nfeatures_to_plot)
+                          factor = dataFactorSelection(), features = input$nfeatures_to_plot,
+                          annotation_samples = colourSelection())
     })
 
     output$dataScatterPlot <- renderPlot({
@@ -461,7 +465,13 @@ server <- function(input, output) {
         if (is.null(m) || is.null(method) || (method == "")) {
             return(NULL)
         } else {
-            plot_dimred(m, method, groups = groupsSelection(), factors = factorsSelection(), color_by = colourSelection()) 
+            if (method == "TSNE") {
+                plot_dimred(m, method, groups = groupsSelection(), factors = factorsSelection(), color_by = colourSelection(),
+                        # Provide perplexity for t-SNE since the default one is typically too high for small datasets
+                        perplexity = 10)     
+            } else {
+                plot_dimred(m, method, groups = groupsSelection(), factors = factorsSelection(), color_by = colourSelection())
+            }
         }
     })
 
