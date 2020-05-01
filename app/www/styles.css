@@ -23,5 +23,8 @@ html .container-fluid .row .tabbable .nav-tabs > li.active > a, body .container-
   background-color: white;
   color: #0E2C37;
 }
+html .description, body .description {
+  margin: 20px 0;
+}
 
 /*# sourceMappingURL=styles.css.map */
