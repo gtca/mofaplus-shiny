@@ -79,6 +79,19 @@ ui <- fluidPage(theme = "styles.css",
                          hr(),
                          plotOutput("factorsPlot")
                 ),
+                tabPanel("Data", 
+                        fluidRow(
+                           column(2, uiOutput("dataFactorSelection")),
+                           column(5, sliderInput(inputId = "nfeatures_to_plot",
+                                                 label = "Number of features to plot",
+                                                 min = 0,
+                                                 max = 100,
+                                                 value = 10,
+                                                 step = 1))
+                        ),
+                        plotOutput("dataHeatmapPlot"),
+                        plotOutput("dataScatterPlot")
+                ),
                 tabPanel("Factors scatter", 
                          fluidRow(
                             column(3, uiOutput("factorChoice_x")),
@@ -203,6 +216,14 @@ server <- function(input, output) {
         if (is.null(input$weightsViewSelection))
             return(1)
         input$weightsViewSelection
+    })
+
+    ### DATA ###
+
+    dataFactorSelection <- reactive({
+        if (is.null(input$dataFactorSelection))
+            return(1)
+        input$dataFactorSelection
     })
     
     ### EMBERDDINGS ###
@@ -351,6 +372,27 @@ server <- function(input, output) {
                     choices = metaChoice(), multiple = FALSE, selectize = TRUE,
                     selected = factorsAxisSelection_x())
     })
+
+    ### DATA (SINGLE FACTOR EXPLORATION) ###
+
+    output$dataFactorSelection <- renderUI({
+        selectInput('dataFactorSelection', 'Factor:', choices = factorsChoice(), multiple = FALSE, selectize = TRUE)
+    })
+
+    output$dataHeatmapPlot <- renderPlot({
+        m <- model()
+        if (is.null(m)) return(NULL)
+        plot_data_heatmap(m, view = viewsSelection(), groups = groupsSelection(), 
+                          factor = dataFactorSelection(), features = input$nfeatures_to_plot)
+    })
+
+    output$dataScatterPlot <- renderPlot({
+        m <- model()
+        if (is.null(m)) return(NULL)
+        plot_data_scatter(m, view = viewsSelection(), groups = groupsSelection(), 
+                          factor = dataFactorSelection(), features = input$nfeatures_to_plot)
+    })
+
 
     ### FACTORS SCATTERPLOT (EMBEDDINGS) ###
     
