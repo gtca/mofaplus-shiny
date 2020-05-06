@@ -1,4 +1,5 @@
 $lightgrey: #F0F0F0;
+$lightgrey2: #999999;
 $darkgrey: #555555;
 $darkgrey2: #282C2F;
 $firefly: #0E2C37;
@@ -44,5 +45,17 @@ html, body {
 
 	.description {
 		margin: 20px 0;
+	}
+
+	#descriptionMofa {
+		margin-top: 3em;
+		color: $lightgrey2;
+		a {
+			color: $lightgrey2;
+			text-decoration: underline;
+			&:hover, &:active {
+				color: white;
+			}
+		}
 	}
 }

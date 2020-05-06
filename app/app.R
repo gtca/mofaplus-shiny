@@ -35,6 +35,14 @@ ui <- fluidPage(theme = "styles.css",
             uiOutput("groupsChoice"),
             uiOutput("factorsChoice"),
             uiOutput("colourChoice"),
+            div(id="descriptionMofa", checked=NA,
+                span("More information on MOFA+ is "),
+                a(href="https://github.com/bioFAM/MOFA2", " on GitHub", target="_blank"),
+                # TODO: add link to the paper when available
+                br(),
+                span("Source code of this app is available "),
+                a(href="https://github.com/gtca/mofaplus-shiny", "here", target="_blank"),
+            ),
             width = 3
         ),
     

@@ -26,5 +26,16 @@ html .container-fluid .row .tabbable .nav-tabs > li.active > a, body .container-
 html .description, body .description {
   margin: 20px 0;
 }
+html #descriptionMofa, body #descriptionMofa {
+  margin-top: 3em;
+  color: #999999;
+}
+html #descriptionMofa a, body #descriptionMofa a {
+  color: #999999;
+  text-decoration: underline;
+}
+html #descriptionMofa a:hover, html #descriptionMofa a:active, body #descriptionMofa a:hover, body #descriptionMofa a:active {
+  color: white;
+}
 
 /*# sourceMappingURL=styles.css.map */
