@@ -65,26 +65,30 @@ ui <- fluidPage(theme = "styles.css",
                     p("Visualize factor weights as a first step to interpret factors.", class="description"),
                     fluidRow(
                        column(2, uiOutput("weightsViewSelection")),
-                       column(5, sliderInput(inputId = "nfeatures_to_label",
-                                             label = "Number of features to label:",
+                       column(3, sliderInput(inputId = "nfeatures_to_label",
+                                             label = "Number of top features to label:",
                                              min = 0,
                                              max = 100,
                                              value = 10,
-                                             step = 1))
+                                             step = 1)),
+                       column(3, uiOutput("weightsFeatureSelection"))
                     ),
-                    plotOutput("weightsPlot")
+                    plotOutput("weightsPlot"),
+                    p("Top 10 features per factor in the current view are displayed below:", class="description"),
+                    plotOutput("topWeightsPlot")
                 ),
                 tabPanel("Factor exploration",
                     p("Explore factors one by one by plotting original data values for their top weights.", class="description"),
                     fluidRow(
                        column(2, uiOutput("dataFactorSelection")),
                        column(2, uiOutput("dataViewSelection")),
-                       column(5, sliderInput(inputId = "nfeatures_to_plot",
+                       column(3, sliderInput(inputId = "nfeatures_to_plot",
                                              label = "Number of top features to plot:",
                                              min = 0,
                                              max = 100,
                                              value = 10,
-                                             step = 1))
+                                             step = 1)),
+                       column(3, uiOutput("dataFeatureSelection"))
                     ),
                     plotOutput("dataHeatmapPlot"),
                     plotOutput("dataScatterPlot")
@@ -209,6 +213,12 @@ server <- function(input, output) {
         names(m@dim_red)
     })
 
+    featuresChoice <- reactive({
+        m <- model()
+        if (is.null(m)) return(NULL)
+        features_names(m)
+    })
+
     ### Remembering selected subset of views, groups, factors, etc.
 
     # viewsSelection <- reactive({
@@ -243,6 +253,12 @@ server <- function(input, output) {
         input$weightsViewSelection
     })
 
+    weightsFeatureSelection <- reactive({
+        if (is.null(input$weightsFeatureSelection))
+            return(NULL)
+        input$weightsFeatureSelection
+    })
+
     ### DATA ###
 
     dataFactorSelection <- reactive({
@@ -255,6 +271,12 @@ server <- function(input, output) {
         if (is.null(input$dataViewSelection))
             return(1)
         input$dataViewSelection
+    })
+
+    dataFeatureSelection <- reactive({
+        if (is.null(input$dataFeatureSelection))
+            return(NULL)
+        input$dataFeatureSelection
     })
     
     ### EMBERDDINGS ###
@@ -335,7 +357,7 @@ server <- function(input, output) {
     })
     
     output$colourChoice <- renderUI({
-        selectInput('colourChoice', 'Colour cells:', choices = metaFeatureFactorChoice(), selected = "group", multiple = FALSE, selectize = FALSE)
+        selectInput('colourChoice', 'Colour samples:', choices = metaFeatureFactorChoice(), selected = "group", multiple = FALSE, selectize = FALSE)
     })
 
     ### MODEL OVERVIEW ###
@@ -375,10 +397,27 @@ server <- function(input, output) {
         selectInput('weightsViewSelection', 'View:', choices = viewsChoice(), multiple = FALSE, selectize = TRUE)
     })
 
+    output$weightsFeatureSelection <- renderUI({
+        selectInput('weightsFeatureSelection', 'Label manually:', choices = featuresChoice()[weightsViewSelection()], multiple = TRUE, selectize = TRUE)
+    })
+
     output$weightsPlot <- renderPlot({
         m <- model()
         if (is.null(m)) return(NULL)
-        plot_weights(m, view = weightsViewSelection(), factors = factorsSelection(), nfeatures = input$nfeatures_to_label)
+        if (!is.null(weightsFeatureSelection()) && (length(weightsFeatureSelection()) > 0)) {
+            # Some features are selected manually
+            plot_weights(m, view = weightsViewSelection(), factors = factorsSelection(), manual = weightsFeatureSelection())
+        } else {
+            plot_weights(m, view = weightsViewSelection(), factors = factorsSelection(), nfeatures = input$nfeatures_to_label)
+        }
+    })
+
+    output$topWeightsPlot <- renderPlot({
+        m <- model()
+        if (is.null(m)) return(NULL)
+        plot_top_weights(m, view = weightsViewSelection(), 
+                         factors = factorsSelection(), 
+                         nfeatures = input$nfeatures_to_label)
     })
 
     # output$weightsInfo <- renderPrint({
@@ -414,21 +453,40 @@ server <- function(input, output) {
         selectInput('dataViewSelection', 'View:', choices = viewsChoice(), multiple = FALSE, selectize = TRUE)
     })
 
+    output$dataFeatureSelection <- renderUI({
+        selectInput('dataFeatureSelection', 'Select features manually:', 
+                    choices = featuresChoice()[dataViewSelection()], multiple = TRUE, selectize = TRUE)
+    })
+
     output$dataHeatmapPlot <- renderPlot({
         m <- model()
         if (is.null(m)) return(NULL)
+
+        # Figure out if samples should be annotated
         annotation_samples <- NULL
         if (colourSelection() %in% colnames(samples_metadata(m))) annotation_samples <- colourSelection()
+
+        # Figure out if features are provided manually
+        selection_features <- input$nfeatures_to_plot
+        if (!is.null(dataFeatureSelection()) && (length(dataFeatureSelection()) > 0))
+            selection_features <- dataFeatureSelection()
+
         plot_data_heatmap(m, view = dataViewSelection(), groups = groupsSelection(), 
-                          factor = dataFactorSelection(), features = input$nfeatures_to_plot,
+                          factor = dataFactorSelection(), features = selection_features,
                           annotation_samples = annotation_samples)
     })
 
     output$dataScatterPlot <- renderPlot({
         m <- model()
         if (is.null(m)) return(NULL)
+
+        # Figure out if features are provided manually
+        selection_features <- input$nfeatures_to_plot
+        if (!is.null(dataFeatureSelection()) && (length(dataFeatureSelection()) > 0))
+            selection_features <- dataFeatureSelection()
+
         plot_data_scatter(m, view = dataViewSelection(), groups = groupsSelection(), 
-                          factor = dataFactorSelection(), features = input$nfeatures_to_plot)
+                          factor = dataFactorSelection(), features = selection_features)
     })
 
 
