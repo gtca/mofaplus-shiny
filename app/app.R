@@ -78,6 +78,7 @@ ui <- fluidPage(theme = "styles.css",
                     p("Explore factors one by one by plotting original data values for their top weights.", class="description"),
                     fluidRow(
                        column(2, uiOutput("dataFactorSelection")),
+                       column(2, uiOutput("dataViewSelection")),
                        column(5, sliderInput(inputId = "nfeatures_to_plot",
                                              label = "Number of top features to plot:",
                                              min = 0,
@@ -187,11 +188,15 @@ server <- function(input, output) {
     metaFeatureFactorChoice <- reactive({
         m <- model()
         if (is.null(m)) return(NULL)
-        choices_names <- colnames(samples_metadata(m))
-        choices_names <- choices_names[choices_names != "sample"]
-        c(list("metadata" = choices_names), 
+        meta_names <- list()
+        meta_names <- colnames(samples_metadata(m))
+        meta_names <- meta_names[meta_names != "sample"]
+        if (length(meta_names) > 1)
+            # There's more information than just a group
+            meta_names <- list("Metadata" = meta_names)
+        c(meta_names, 
           features_names(m),
-          list("factors" = factors_names(m)))
+          list("Factors" = factors_names(m)))
     })
     
     dimredChoice <- reactive({
@@ -206,12 +211,11 @@ server <- function(input, output) {
 
     ### Remembering selected subset of views, groups, factors, etc.
 
-    viewsSelection <- reactive({
-        if (is.null(input$viewsChoice))
-            return("all")
-        input$viewsChoice
-    })
-
+    # viewsSelection <- reactive({
+    #     if (is.null(input$viewsChoice))
+    #         return("all")
+    #     input$viewsChoice
+    # })
 
     groupsSelection <- reactive({
         if (is.null(input$groupsChoice))
@@ -245,6 +249,12 @@ server <- function(input, output) {
         if (is.null(input$dataFactorSelection))
             return(1)
         input$dataFactorSelection
+    })
+
+    dataViewSelection <- reactive({
+        if (is.null(input$dataViewSelection))
+            return(1)
+        input$dataViewSelection
     })
     
     ### EMBERDDINGS ###
@@ -313,7 +323,7 @@ server <- function(input, output) {
     
     
     output$viewsChoice <- renderUI({
-        selectInput('viewsChoice', 'Views:', choices = viewsChoice(), multiple = TRUE, selectize = TRUE)
+        selectInput('viewsChoice', 'Views:', choices = viewsChoice(), selected = viewsChoice(), multiple = TRUE, selectize = TRUE)
     })
 
     output$groupsChoice <- renderUI({
@@ -325,7 +335,7 @@ server <- function(input, output) {
     })
     
     output$colourChoice <- renderUI({
-        selectInput('colourChoice', 'Colour cells:', choices = metaFeatureFactorChoice(), multiple = FALSE, selectize = TRUE)
+        selectInput('colourChoice', 'Colour cells:', choices = metaFeatureFactorChoice(), selected = "group", multiple = FALSE, selectize = FALSE)
     })
 
     ### MODEL OVERVIEW ###
@@ -353,8 +363,8 @@ server <- function(input, output) {
         m <- model()
         if (is.null(m)) return(NULL)
         plot_variance_explained(m, 
-                                views = viewsSelection(), groups = groupsSelection(), factors = factorsSelection(), 
-                                plot_total = FALSE, use_cache = FALSE) +
+                                factors = factorsSelection(), 
+                                plot_total = FALSE, use_cache = TRUE) +
             theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
                   strip.text.x = element_text(size = 14, colour = "#333333"))
     })
@@ -400,12 +410,16 @@ server <- function(input, output) {
         selectInput('dataFactorSelection', 'Factor:', choices = factorsChoice(), multiple = FALSE, selectize = TRUE)
     })
 
+    output$dataViewSelection <- renderUI({
+        selectInput('dataViewSelection', 'View:', choices = viewsChoice(), multiple = FALSE, selectize = TRUE)
+    })
+
     output$dataHeatmapPlot <- renderPlot({
         m <- model()
         if (is.null(m)) return(NULL)
         annotation_samples <- NULL
         if (colourSelection() %in% colnames(samples_metadata(m))) annotation_samples <- colourSelection()
-        plot_data_heatmap(m, view = viewsSelection(), groups = groupsSelection(), 
+        plot_data_heatmap(m, view = dataViewSelection(), groups = groupsSelection(), 
                           factor = dataFactorSelection(), features = input$nfeatures_to_plot,
                           annotation_samples = annotation_samples)
     })
@@ -413,7 +427,7 @@ server <- function(input, output) {
     output$dataScatterPlot <- renderPlot({
         m <- model()
         if (is.null(m)) return(NULL)
-        plot_data_scatter(m, view = viewsSelection(), groups = groupsSelection(), 
+        plot_data_scatter(m, view = dataViewSelection(), groups = groupsSelection(), 
                           factor = dataFactorSelection(), features = input$nfeatures_to_plot)
     })
 
