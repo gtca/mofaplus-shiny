@@ -98,13 +98,20 @@ ui <- fluidPage(theme = "styles.css",
                     fluidRow(
                        column(2, uiOutput("factorsAxisChoice_x")),
                        column(2, switchInput(inputId = "factorsRotateLabelsX", label = "X&nbsp;axis&nbsp;labels&nbsp;90°", value = FALSE),
-                                 style = "margin-top: 25px; margin-right: 5px;"),
+                                 style = "margin-top: 25px; margin-right: 5px;")
+                    ),
+                    fluidRow(
                        column(1, switchInput(inputId = "factorsAddDots", label = "Points", value = TRUE),
                                  style = "margin-top: 25px; margin-right: 25px;"),
                        column(2, sliderInput(inputId = 'factorsDotSize', label = 'Point size', value = 2, min = 1, max = 8, step = .5),
                                  style = "margin-right: 5px;"),
+                       column(2, sliderInput(inputId = 'factorsDotAlpha', label = 'Point alpha', value = 1, min = .1, max = 1, step = .1),
+                                 style = "margin-right: 5px;"),
+                    
                        column(1, switchInput(inputId = "factorsAddViolins", label = "Violins", value = FALSE),
-                                 style = "margin-top: 25px; margin-right: 25px;")
+                                 style = "margin-top: 25px; margin-right: 25px;"),
+                       column(2, sliderInput(inputId = 'factorsViolinAlpha', label = 'Violin alpha', value = 1, min = .1, max = 1, step = .1),
+                                 style = "margin-right: 5px;")
                     ),
                     hr(),
                     plotOutput("factorsPlot")
@@ -115,9 +122,11 @@ ui <- fluidPage(theme = "styles.css",
                        column(2, uiOutput("factorChoice_x")),
                        column(1, actionButton("swapEmbeddings", "", 
                                               icon("exchange-alt"),
-                                              style = "margin: 25px 0; display: flex; align-iterms: center;")),
+                                              style = "margin: 25px auto; display: flex;")),
                        column(2, uiOutput("factorChoice_y")),
-                       column(2, sliderInput(inputId = 'factorDotSize', label = 'Point size', value = 2, min = 1, max = 8, step = .5))
+                       column(2, sliderInput(inputId = 'factorDotSize', label = 'Point size', value = 2, min = 1, max = 8, step = .5)),
+                       column(2, sliderInput(inputId = 'factorDotAlpha', label = 'Point alpha', value = 1, min = .1, max = 1, step = .1),
+                                 style = "margin-right: 5px;")
                        # column(2, uiOutput("factorsGroupsChoice_xy"))
                     ),
                     hr(),
@@ -128,7 +137,8 @@ ui <- fluidPage(theme = "styles.css",
                 tabPanel("Embeddings", 
                     p("Run non-linear dimensionality reduction method on factors.", class="description"),
                     fluidRow(
-                       column(2, uiOutput("manifoldChoice"))
+                       column(2, uiOutput("manifoldChoice")),
+                       column(2, sliderInput(inputId = 'manifoldDotSize', label = 'Point size', value = 2, min = 1, max = 8, step = .5))
                     ),
                     hr(),
                     plotOutput("dimredPlot")
@@ -439,7 +449,7 @@ server <- function(input, output) {
         if (is.null(m)) return(NULL)
         p <- plot_factor(m, factors = factorsSelection(), color_by = colourSelection(), group_by = factorsAxisSelection_x(), 
                     groups = groupsSelection(), add_dots = input$factorsAddDots, add_violin = input$factorsAddViolins,
-                    dot_size = input$factorsDotSize)
+                    dot_size = input$factorsDotSize, dot_alpha = input$factorsDotAlpha, violin_alpha = input$factorsViolinAlpha)
         if (input$factorsRotateLabelsX) {
             p + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = .5))
         } else {
@@ -518,7 +528,7 @@ server <- function(input, output) {
         m <- model()
         if (is.null(m)) return(NULL)
         plot_factors(m, groups = groupsSelection(), factors = c(input$factorChoice_x, input$factorChoice_y), color_by = colourSelection(),
-                     dot_size = input$factorDotSize)
+                     dot_size = input$factorDotSize, alpha = input$factorDotAlpha)
     })
     
     output$embeddingsInfo <- renderPrint({
@@ -568,12 +578,14 @@ server <- function(input, output) {
         if (is.null(m) || is.null(method) || (method == "")) {
             return(NULL)
         } else {
+            set.seed(1)
             if (method == "TSNE") {
                 plot_dimred(m, method, groups = groupsSelection(), factors = factorsSelection(), color_by = colourSelection(),
                         # Provide perplexity for t-SNE since the default one is typically too high for small datasets
-                        perplexity = 10)     
+                        perplexity = 10, dot_size = input$manifoldDotSize)     
             } else {
-                plot_dimred(m, method, groups = groupsSelection(), factors = factorsSelection(), color_by = colourSelection())
+                plot_dimred(m, method, groups = groupsSelection(), factors = factorsSelection(), color_by = colourSelection(),
+                            dot_size = input$manifoldDotSize)
             }
         }
     })
