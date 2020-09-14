@@ -74,7 +74,7 @@ ui <- fluidPage(theme = "styles.css",
                        column(3, uiOutput("weightsFeatureSelection"))
                     ),
                     plotOutput("weightsPlot"),
-                    p("Top 10 features per factor in the current view are displayed below:", class="description"),
+                    p("Top features per factor in the current view are displayed below:", class="description"),
                     plotOutput("topWeightsPlot")
                 ),
                 tabPanel("Factor exploration",
