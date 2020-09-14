@@ -97,9 +97,12 @@ ui <- fluidPage(theme = "styles.css",
                     p("Visualize factor values and explore their distribution in different sets of samples", class="description"),
                     fluidRow(
                        column(2, uiOutput("factorsAxisChoice_x")),
-                       # column(3, uiOutput("factorsGroupsChoice")),
+                       column(2, switchInput(inputId = "factorsRotateLabelsX", label = "X&nbsp;axis&nbsp;labels&nbsp;90°", value = FALSE),
+                                 style = "margin-top: 25px; margin-right: 5px;"),
                        column(1, switchInput(inputId = "factorsAddDots", label = "Points", value = TRUE),
                                  style = "margin-top: 25px; margin-right: 25px;"),
+                       column(2, sliderInput(inputId = 'factorsDotSize', label = 'Point size', value = 2, min = 1, max = 8, step = .5),
+                                 style = "margin-right: 5px;"),
                        column(1, switchInput(inputId = "factorsAddViolins", label = "Violins", value = FALSE),
                                  style = "margin-top: 25px; margin-right: 25px;")
                     ),
@@ -109,12 +112,13 @@ ui <- fluidPage(theme = "styles.css",
                 tabPanel("Factors scatter", 
                     p("Visualize pairs of factors to study how they separate different sets of samples.", class="description"),
                     fluidRow(
-                       column(3, uiOutput("factorChoice_x")),
+                       column(2, uiOutput("factorChoice_x")),
                        column(1, actionButton("swapEmbeddings", "", 
                                               icon("exchange-alt"),
-                                              style = "margin: 25px 0;")),
-                       column(3, uiOutput("factorChoice_y")),
-                       column(3, uiOutput("factorsGroupsChoice_xy"))
+                                              style = "margin: 25px 0; display: flex; align-iterms: center;")),
+                       column(2, uiOutput("factorChoice_y")),
+                       column(2, sliderInput(inputId = 'factorDotSize', label = 'Point size', value = 2, min = 1, max = 8, step = .5))
+                       # column(2, uiOutput("factorsGroupsChoice_xy"))
                     ),
                     hr(),
                     plotOutput("embeddingsPlot", 
@@ -433,8 +437,14 @@ server <- function(input, output) {
     output$factorsPlot <- renderPlot({
         m <- model()
         if (is.null(m)) return(NULL)
-        plot_factor(m, factors = factorsSelection(), color_by = colourSelection(), group_by = factorsAxisSelection_x(), 
-                    groups = groupsSelection(), add_dots = input$factorsAddDots, add_violin = input$factorsAddViolins)
+        p <- plot_factor(m, factors = factorsSelection(), color_by = colourSelection(), group_by = factorsAxisSelection_x(), 
+                    groups = groupsSelection(), add_dots = input$factorsAddDots, add_violin = input$factorsAddViolins,
+                    dot_size = input$factorsDotSize)
+        if (input$factorsRotateLabelsX) {
+            p + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = .5))
+        } else {
+            p
+        }
     })
 
     output$factorsAxisChoice_x <- renderUI({
@@ -493,13 +503,13 @@ server <- function(input, output) {
     ### FACTORS SCATTERPLOT (EMBEDDINGS) ###
     
     output$factorChoice_x <- renderUI({
-        selectInput('factorChoice_x', 'Factor on X axis:', 
+        selectInput('factorChoice_x', 'X axis factor:', 
                     choices = factorsChoice(), multiple = FALSE, selectize = TRUE,
                     selected = factorSelection_x())
     })
     
     output$factorChoice_y <- renderUI({
-        selectInput('factorChoice_y', 'Factor on Y axis:', 
+        selectInput('factorChoice_y', 'Y axis factor:', 
                     choices = factorsChoice(), multiple = FALSE, selectize = TRUE,
                     selected = factorSelection_y())
     })
@@ -507,7 +517,8 @@ server <- function(input, output) {
     output$embeddingsPlot <- renderPlot({
         m <- model()
         if (is.null(m)) return(NULL)
-        plot_factors(m, groups = groupsSelection(), factors = c(input$factorChoice_x, input$factorChoice_y), color_by = colourSelection()) 
+        plot_factors(m, groups = groupsSelection(), factors = c(input$factorChoice_x, input$factorChoice_y), color_by = colourSelection(),
+                     dot_size = input$factorDotSize)
     })
     
     output$embeddingsInfo <- renderPrint({
