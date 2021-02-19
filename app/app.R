@@ -12,6 +12,7 @@ library(shinyWidgets)
 
 library(tools)
 library(ggplot2)
+library(ggpubr)
 library(MOFA2)
 
 options(shiny.maxRequestSize = 1500*1024^2)
@@ -28,7 +29,7 @@ ui <- fluidPage(theme = "styles.css",
         sidebarPanel(
             # Model file picker (HDF5 or RDS file)
             fileInput(inputId = "model_file",
-                      label = "Model file:",
+                      label = "Model file (.hdf5 or .rds):",
                       buttonLabel = "Model file",
                       accept = c("hdf5", "rds")),
             uiOutput("viewsChoice"),
